@@ -4,6 +4,7 @@
 #include <OgreViewport.h>
 
 #include "rviz_common/display_context.hpp"
+#include "rviz_common/visualization_manager.hpp"
 #include "rviz_common/properties/string_property.hpp"
 #include "rviz_common/render_panel.hpp"
 #include "rviz_rendering/render_window.hpp"
@@ -26,9 +27,10 @@ ImagePublisherDisplay::ImagePublisherDisplay()
 
 ImagePublisherDisplay::~ImagePublisherDisplay()
 {
-  if (context_ && context_->getRenderPanel() && context_->getRenderPanel()->getRenderWindow()) {
+  auto vis_manager = dynamic_cast<rviz_common::VisualizationManager*>(context_);
+  if (vis_manager && vis_manager->getRenderPanel() && vis_manager->getRenderPanel()->getRenderWindow()) {
     rviz_rendering::RenderWindowOgreAdapter::removeListener(
-      context_->getRenderPanel()->getRenderWindow(), this);
+      vis_manager->getRenderPanel()->getRenderWindow(), this);
   }
 }
 
@@ -37,9 +39,10 @@ void ImagePublisherDisplay::onInitialize()
   node_ = context_->getRosNodeAbstraction().lock()->get_raw_node();
   updateTopic();
   
-  if (context_->getRenderPanel() && context_->getRenderPanel()->getRenderWindow()) {
+  auto vis_manager = dynamic_cast<rviz_common::VisualizationManager*>(context_);
+  if (vis_manager && vis_manager->getRenderPanel() && vis_manager->getRenderPanel()->getRenderWindow()) {
     rviz_rendering::RenderWindowOgreAdapter::addListener(
-      context_->getRenderPanel()->getRenderWindow(), this);
+      vis_manager->getRenderPanel()->getRenderWindow(), this);
   }
 }
 
@@ -101,7 +104,7 @@ void ImagePublisherDisplay::postRenderTargetUpdate(const Ogre::RenderTargetEvent
   msg->data.resize(height * width * 3);
 
   Ogre::PixelBox pb(width, height, 1, Ogre::PF_BYTE_RGB, msg->data.data());
-  renderTarget->copyContentsToMemory(pb, Ogre::RenderTarget::FB_AUTO);
+  renderTarget->copyContentsToMemory(Ogre::Box(0, 0, width, height), pb, Ogre::RenderTarget::FB_AUTO);
 
   publisher_->publish(std::move(msg));
 }
