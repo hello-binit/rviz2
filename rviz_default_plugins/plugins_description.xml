@@ -123,6 +123,16 @@
   </class>
 
   <class
+    name="rviz_default_plugins/ImagePublisher"
+    type="rviz_default_plugins::displays::ImagePublisherDisplay"
+    base_class_type="rviz_common::Display"
+  >
+    <description>
+      Publishes the 3D rendered view as a sensor_msgs/Image topic.
+    </description>
+  </class>
+
+  <class
     name="rviz_default_plugins/InteractiveMarkers"
     type="rviz_default_plugins::displays::InteractiveMarkerDisplay"
     base_class_type="rviz_common::Display"

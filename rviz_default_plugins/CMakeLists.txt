@@ -92,6 +92,7 @@ set(rviz_default_plugins_headers_to_moc
   include/rviz_default_plugins/displays/grid_cells/grid_cells_display.hpp
   include/rviz_default_plugins/displays/illuminance/illuminance_display.hpp
   include/rviz_default_plugins/displays/image/image_display.hpp
+  include/rviz_default_plugins/displays/image_publisher/image_publisher_display.hpp
   include/rviz_default_plugins/displays/laser_scan/laser_scan_display.hpp
   include/rviz_default_plugins/displays/map/map_display.hpp
   include/rviz_default_plugins/displays/marker/marker_common.hpp
@@ -153,6 +154,7 @@ set(rviz_default_plugins_source_files
   src/rviz_default_plugins/displays/image/get_transport_from_topic.cpp
   src/rviz_default_plugins/displays/image/image_display.cpp
   src/rviz_default_plugins/displays/image/ros_image_texture.cpp
+  src/rviz_default_plugins/displays/image_publisher/image_publisher_display.cpp
   src/rviz_default_plugins/displays/interactive_markers/integer_action.cpp
   src/rviz_default_plugins/displays/interactive_markers/interactive_marker_control.cpp
   src/rviz_default_plugins/displays/interactive_markers/interactive_marker.cpp
