@@ -44,8 +44,11 @@
 #include "rviz_common/properties/bool_property.hpp"
 #include "rviz_common/properties/float_property.hpp"
 #include "rviz_common/properties/vector_property.hpp"
+#include "rviz_common/properties/string_property.hpp"
 #include "rviz_common/viewport_mouse_event.hpp"
 #include "rviz_common/uniform_string_stream.hpp"
+
+#include <functional>
 
 namespace rviz_default_plugins
 {
@@ -73,6 +76,10 @@ FPSViewController::FPSViewController()
 
   position_property_ = new rviz_common::properties::VectorProperty(
     "Position", DEFAULT_FPS_POSITION, "Position of the camera.", this);
+
+  twist_topic_property_ = new rviz_common::properties::StringProperty(
+    "Twist Topic", "/rviz/camera_twist", "Topic to subscribe to for Twist messages.", this);
+  connect(twist_topic_property_, SIGNAL(changed()), this, SLOT(updateTwistTopic()));
 }
 
 FPSViewController::~FPSViewController() = default;
@@ -82,6 +89,7 @@ void FPSViewController::onInitialize()
   FramePositionTrackingViewController::onInitialize();
   camera_->setProjectionType(Ogre::PT_PERSPECTIVE);
   invert_z_->hide();
+  updateTwistTopic();
 }
 
 void FPSViewController::reset()
@@ -210,6 +218,20 @@ void FPSViewController::mimic(rviz_common::ViewController * source_view)
 void FPSViewController::update(float dt, float ros_dt)
 {
   FramePositionTrackingViewController::update(dt, ros_dt);
+
+  auto now = std::chrono::steady_clock::now();
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_twist_time_).count() > 500) {
+    current_twist_ = geometry_msgs::msg::Twist();
+  }
+
+  if (current_twist_.linear.x != 0.0 || current_twist_.linear.y != 0.0 || current_twist_.linear.z != 0.0 ||
+      current_twist_.angular.x != 0.0 || current_twist_.angular.y != 0.0 || current_twist_.angular.z != 0.0) {
+    float dt_sec = dt / 1e9f;
+    move(current_twist_.linear.x * dt_sec, current_twist_.linear.y * dt_sec, current_twist_.linear.z * dt_sec);
+    yaw(current_twist_.angular.z * dt_sec);
+    pitch(current_twist_.angular.y * dt_sec);
+  }
+
   updateCamera();
 }
 
@@ -257,6 +279,26 @@ void FPSViewController::move(float x, float y, float z)  // NOLINT (this is not 
   Ogre::Vector3 translate(x, y, z);
   position_property_->add(getOrientation() * translate);
 }
+
+void FPSViewController::updateTwistTopic()
+{
+  if (context_ && context_->getRosNodeAbstraction().lock()) {
+    auto node = context_->getRosNodeAbstraction().lock()->get_raw_node();
+    if (node) {
+      twist_sub_ = node->create_subscription<geometry_msgs::msg::Twist>(
+        twist_topic_property_->getStdString(),
+        rclcpp::QoS(10),
+        std::bind(&FPSViewController::twistCallback, this, std::placeholders::_1));
+    }
+  }
+}
+
+void FPSViewController::twistCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
+{
+  current_twist_ = *msg;
+  last_twist_time_ = std::chrono::steady_clock::now();
+}
+
 }  // namespace view_controllers
 }  // namespace rviz_default_plugins
 

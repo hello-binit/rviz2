@@ -43,6 +43,10 @@
 # pragma clang diagnostic pop
 #endif
 
+#include <rclcpp/rclcpp.hpp>
+#include <geometry_msgs/msg/twist.hpp>
+#include <chrono>
+
 #include "rviz_common/frame_position_tracking_view_controller.hpp"
 
 #include "rviz_default_plugins/visibility_control.hpp"
@@ -54,6 +58,7 @@ namespace properties
 class FloatProperty;
 class Shape;
 class VectorProperty;
+class StringProperty;
 }  // namespace properties
 }  // namespace rviz_common
 
@@ -65,6 +70,8 @@ namespace view_controllers
 class RVIZ_DEFAULT_PLUGINS_PUBLIC FPSViewController : public
   rviz_common::FramePositionTrackingViewController
 {
+  Q_OBJECT
+
 public:
   FPSViewController();
 
@@ -114,6 +121,17 @@ protected:
   rviz_common::properties::FloatProperty * yaw_property_;
   rviz_common::properties::FloatProperty * pitch_property_;
   rviz_common::properties::VectorProperty * position_property_;
+  rviz_common::properties::StringProperty * twist_topic_property_;
+
+private Q_SLOTS:
+  void updateTwistTopic();
+
+private:
+  void twistCallback(const geometry_msgs::msg::Twist::SharedPtr msg);
+
+  rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr twist_sub_;
+  geometry_msgs::msg::Twist current_twist_;
+  std::chrono::steady_clock::time_point last_twist_time_;
 };
 
 }  // namespace view_controllers
