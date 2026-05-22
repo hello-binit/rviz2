@@ -45,6 +45,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <geometry_msgs/msg/twist.hpp>
+#include <chrono>
 
 #include "rviz_common/frame_position_tracking_view_controller.hpp"
 
@@ -130,6 +131,7 @@ private:
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr twist_sub_;
   geometry_msgs::msg::Twist current_twist_;
+  std::chrono::steady_clock::time_point last_twist_time_;
 };
 
 }  // namespace view_controllers

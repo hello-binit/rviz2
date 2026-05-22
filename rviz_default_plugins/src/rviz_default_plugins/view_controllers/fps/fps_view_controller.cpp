@@ -219,11 +219,17 @@ void FPSViewController::update(float dt, float ros_dt)
 {
   FramePositionTrackingViewController::update(dt, ros_dt);
 
+  auto now = std::chrono::steady_clock::now();
+  if (std::chrono::duration_cast<std::chrono::milliseconds>(now - last_twist_time_).count() > 500) {
+    current_twist_ = geometry_msgs::msg::Twist();
+  }
+
   if (current_twist_.linear.x != 0.0 || current_twist_.linear.y != 0.0 || current_twist_.linear.z != 0.0 ||
       current_twist_.angular.x != 0.0 || current_twist_.angular.y != 0.0 || current_twist_.angular.z != 0.0) {
-    move(current_twist_.linear.x * dt, current_twist_.linear.y * dt, current_twist_.linear.z * dt);
-    yaw(current_twist_.angular.z * dt);
-    pitch(current_twist_.angular.y * dt);
+    float dt_sec = dt / 1e9f;
+    move(current_twist_.linear.x * dt_sec, current_twist_.linear.y * dt_sec, current_twist_.linear.z * dt_sec);
+    yaw(current_twist_.angular.z * dt_sec);
+    pitch(current_twist_.angular.y * dt_sec);
   }
 
   updateCamera();
@@ -290,6 +296,7 @@ void FPSViewController::updateTwistTopic()
 void FPSViewController::twistCallback(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
   current_twist_ = *msg;
+  last_twist_time_ = std::chrono::steady_clock::now();
 }
 
 }  // namespace view_controllers
